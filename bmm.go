@@ -12,6 +12,7 @@ import (
 type APIClient struct {
 	httpClient *resty.Client
 	token      *Token
+	logger     *slog.Logger
 }
 
 // NewApiClient creates a new BMM API client, using the provided token
@@ -24,7 +25,14 @@ func NewApiClient(baseURL string, token *Token) *APIClient {
 	client.httpClient.SetHeader("Accept-Language", "nb")
 	client.token = token
 
+	client.logger = slog.Default().With("component", "bmm")
+
 	return client
+}
+
+func (c *APIClient) SetLogger(logger *slog.Logger) *APIClient {
+	c.logger = logger
+	return c
 }
 
 func (c *APIClient) SetBaseURL(baseURL string) *APIClient {
