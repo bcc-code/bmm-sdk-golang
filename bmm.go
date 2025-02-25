@@ -3,16 +3,19 @@ package bmm
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"log/slog"
 	"net/http"
 	"net/url"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 )
 
 type APIClient struct {
 	httpClient *resty.Client
 	token      *Token
 	logger     *slog.Logger
+	debug      bool
 }
 
 // NewApiClient creates a new BMM API client, using the provided token
@@ -22,7 +25,7 @@ func NewApiClient(baseURL string, token *Token) *APIClient {
 	client := &APIClient{}
 	client.httpClient = resty.New()
 	client.httpClient.BaseURL = baseURL
-	client.httpClient.SetHeader("Accept-Language", "nb")
+	client.httpClient.SetHeader("Accept-Language", "no")
 	client.token = token
 
 	client.logger = slog.Default().With("component", "bmm")
@@ -37,6 +40,11 @@ func (c *APIClient) SetLogger(logger *slog.Logger) *APIClient {
 
 func (c *APIClient) SetBaseURL(baseURL string) *APIClient {
 	c.httpClient.BaseURL = baseURL
+	return c
+}
+
+func (c *APIClient) SetDebug(debug bool) *APIClient {
+	c.debug = debug
 	return c
 }
 
@@ -55,7 +63,7 @@ func (c *APIClient) makeRequest(method, path string, body any) ([]byte, error) {
 
 	req := c.httpClient.R().
 		SetAuthToken(token).
-		SetBody(body)
+		SetBody(body).SetDebug(c.debug)
 
 	var res *resty.Response
 
@@ -74,12 +82,12 @@ func (c *APIClient) makeRequest(method, path string, body any) ([]byte, error) {
 	}
 
 	if res == nil {
-		slog.Error("request failed, response is nil")
+		c.logger.Error("request failed, response is nil")
 		return nil, fmt.Errorf("request failed, response is nil")
 	}
 
 	if res.StatusCode() != http.StatusOK {
-		slog.Error("request failed with status code", "code", res.StatusCode(), "response", res.Body())
+		c.logger.Error("request failed with status code", "code", res.StatusCode(), "response", res.Body())
 		return nil, fmt.Errorf("request failed with status code %d", res.StatusCode())
 	}
 
@@ -134,4 +142,58 @@ func (c *APIClient) GetLanguages() ([]Overview, error) {
 	}
 
 	return parseResponse[[]Overview](data)
+}
+
+type GlobalStats struct {
+	Boys  int `json:"boys_points"`
+	Girls int `json:"girls_points"`
+}
+
+func (c *APIClient) GetHVHEGlobalStats() (*GlobalStats, error) {
+	data, err := c.makeRequest("GET", "/HVHE/status", nil)
+
+	c.logger.Debug("data", "data", string(data))
+	if err != nil {
+		return nil, err
+	}
+
+	return parseResponse[*GlobalStats](data)
+}
+
+type HVHENotificationsRequest struct {
+	ChurchUID       string `json:"church_uid"`
+	Winner          string `json:"winner"`
+	GameNightNumber int    `json:"game_night_number"`
+}
+
+func (c *APIClient) HVHENotifications(churchUID uuid.UUID, winner string, gameNightNumber int) error {
+	reqData := HVHENotificationsRequest{
+		ChurchUID:       churchUID.String(),
+		Winner:          winner,
+		GameNightNumber: gameNightNumber,
+	}
+
+	_, err := c.makeRequest("POST", "/HVHE/notifications", reqData)
+
+	return err
+}
+
+type HVHEGameNightRequest struct {
+	ChurchUID       string `json:"church_uid"`
+	Winner          string `json:"winner"`
+	GameNightNumber int    `json:"game_night_number"`
+	Units           int    `json:"units"`
+}
+
+func (c *APIClient) HVHEGameNight(churchUID uuid.UUID, winner string, gameNightNumber int, units int) error {
+	reqData := HVHEGameNightRequest{
+		ChurchUID:       churchUID.String(),
+		Winner:          winner,
+		GameNightNumber: gameNightNumber,
+		Units:           units,
+	}
+
+	_, err := c.makeRequest("POST", "/HVHE/gamenight", reqData)
+
+	return err
 }
