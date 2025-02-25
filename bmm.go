@@ -145,8 +145,8 @@ func (c *APIClient) GetLanguages() ([]Overview, error) {
 }
 
 type GlobalStats struct {
-	Boys  int `json:"boys_points"`
-	Girls int `json:"girls_points"`
+	Boys  int `json:"boys"`
+	Girls int `json:"girls"`
 }
 
 func (c *APIClient) GetHVHEGlobalStats() (*GlobalStats, error) {
