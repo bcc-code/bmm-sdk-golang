@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
@@ -158,6 +159,29 @@ func (c *APIClient) GetHVHEGlobalStats() (*GlobalStats, error) {
 	}
 
 	return parseResponse[*GlobalStats](data)
+}
+
+type QuestionAnswerRequest struct {
+	QuestionID        string `json:"question_id"`
+	AnsweredCorrectly bool   `json:"answered_correctly"`
+	SelectedAnswerID  string `json:"selected_answer_id"`
+	PersonID          int    `json:"person_id"`
+}
+
+func (c *APIClient) SubmiteAnswer(QuestionID string, AnsweredCorrectly bool, SelectedAnswerID string, PersonID string) error {
+	personIDInt, err := strconv.Atoi(PersonID)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.makeRequest("POST", "/question/answers", QuestionAnswerRequest{
+		QuestionID:        QuestionID,
+		AnsweredCorrectly: AnsweredCorrectly,
+		SelectedAnswerID:  SelectedAnswerID,
+		PersonID:          personIDInt,
+	})
+
+	return err
 }
 
 type HVHENotificationsRequest struct {
