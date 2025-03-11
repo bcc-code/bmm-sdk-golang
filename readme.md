@@ -11,7 +11,7 @@ PRs expanding it are welcome.
 
 ```go
 import (
-    "github.com/bccmedia/bmm-sdk-golang"
+    "github.com/bcc-code/bmm-sdk-golang"
 )
 
 func main() {
