@@ -168,7 +168,7 @@ type QuestionAnswerRequest struct {
 	PersonID          int    `json:"person_id"`
 }
 
-func (c *APIClient) SubmiteAnswer(QuestionID string, AnsweredCorrectly bool, SelectedAnswerID string, PersonID string) error {
+func (c *APIClient) SubmitAnswer(QuestionID string, AnsweredCorrectly bool, SelectedAnswerID string, PersonID string) error {
 	personIDInt, err := strconv.Atoi(PersonID)
 	if err != nil {
 		return err
