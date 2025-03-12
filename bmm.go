@@ -174,11 +174,13 @@ func (c *APIClient) SubmitAnswer(QuestionID string, AnsweredCorrectly bool, Sele
 		return err
 	}
 
-	_, err = c.makeRequest("POST", "/question/answers", QuestionAnswerRequest{
-		QuestionID:        QuestionID,
-		AnsweredCorrectly: AnsweredCorrectly,
-		SelectedAnswerID:  SelectedAnswerID,
-		PersonID:          personIDInt,
+	_, err = c.makeRequest("POST", "/question/answers", []QuestionAnswerRequest{
+		{
+			QuestionID:        QuestionID,
+			AnsweredCorrectly: AnsweredCorrectly,
+			SelectedAnswerID:  SelectedAnswerID,
+			PersonID:          personIDInt,
+		},
 	})
 
 	return err
