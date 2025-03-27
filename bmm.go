@@ -223,3 +223,19 @@ func (c *APIClient) HVHEGameNight(churchUID uuid.UUID, winner string, gameNightN
 
 	return err
 }
+
+type HVHEGameNight3Request struct {
+	Winner string `json:"winner"`
+	Units  int    `json:"units"`
+}
+
+func (c *APIClient) HVHEGameNight3(winner string, units int) error {
+	reqData := HVHEGameNight3Request{
+		Winner: winner,
+		Units:  units,
+	}
+
+	_, err := c.makeRequest("POST", "/HVHE/gamenight3", reqData)
+
+	return err
+}
